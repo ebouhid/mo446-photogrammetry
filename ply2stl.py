@@ -16,7 +16,7 @@ parser.add_argument('-d', '--depth', type=float, default=15,
 parser.add_argument('-on', '--outlier-neighbors', type=int, default=30,
                     help='Number of neighbors to analyze for outlier removal, higher = more aggressive')
 parser.add_argument('-osr', '--outlier-std-ratio', type=float, default=2.0,
-                    help='Standard deviation ratio for outlier removal, higher = more aggressive')
+                    help='Standard deviation ratio for outlier removal, lower = more aggressive')
 parser.add_argument('-k', '--knn', type=int, default=30,
                     help='Number of nearest neighbors for normal estimation, higher = smoother normals')
 parser.add_argument('-tp', '--tangent-plane', type=int, default=100,
