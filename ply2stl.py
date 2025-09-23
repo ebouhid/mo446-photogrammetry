@@ -9,8 +9,6 @@ parser.add_argument('-i', '--input', type=str,
                     required=True, help='Input PLY file')
 parser.add_argument('-o', '--output', type=str,
                     required=True, help='Output STL path')
-parser.add_argument('-a', '--alpha', type=float, default=2.0,
-                    help='Delaunay triangulation alpha')
 parser.add_argument('-s', '--scale', type=float, default=1.0,
                     help='Scaling factor (bump it up if the model is too small)')
 
