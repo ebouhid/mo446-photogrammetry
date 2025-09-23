@@ -1,29 +1,45 @@
-import os
 import argparse
-
-from plyfile import PlyData, PlyElement
-from stl import mesh
-
 import numpy as np
+import open3d as o3d
 
-from scipy.spatial import ConvexHull
+from plyfile import PlyData
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input', type=str, required=True, help='Input PLY file')
-parser.add_argument('-o', '--output', type=str, required=True, help='Output STL path')
+parser.add_argument('-i', '--input', type=str,
+                    required=True, help='Input PLY file')
+parser.add_argument('-o', '--output', type=str,
+                    required=True, help='Output STL path')
+parser.add_argument('-a', '--alpha', type=float, default=2.0,
+                    help='Delaunay triangulation alpha')
+parser.add_argument('-s', '--scale', type=float, default=1.0,
+                    help='Scaling factor (bump it up if the model is too small)')
+
 args = parser.parse_args()
 
 with open(args.input, 'rb') as f:
     plydata = PlyData.read(f)
 
-vertices = np.array(plydata['vertex'][['x', 'y', 'z']].tolist())
+# escala de 10 porque o modelo original é muito pequeno
+points = np.array(plydata['vertex'][['x', 'y', 'z']].tolist()) * args.scale
 
-hull = ConvexHull(vertices)
+pcd = o3d.geometry.PointCloud()
+pcd.points = o3d.utility.Vector3dVector(points)
 
-m = mesh.Mesh(np.zeros(len(hull.simplices), dtype=mesh.Mesh.dtype))
+# ajustar valores para remover outliers e ruido
+cl, ind = pcd.remove_statistical_outlier(nb_neighbors=30, std_ratio=2.0)
+pcd = pcd.select_by_index(ind)
 
-for i, simplex in enumerate(hull.simplices):
-    for j in range(len('xyz')):
-        m.vectors[i][j] = vertices[simplex[j]]
+pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(
+    knn=30))  # maior = normais mais suaves
+# empiricamente 100 fica melhor. nao pergunte!
+pcd.orient_normals_consistent_tangent_plane(100)
 
-m.save(args.output)
+mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
+    pcd, depth=15)  # mais depth = maior resolucao, mas é mais lento e usa muita RAM
+
+bbox = pcd.get_axis_aligned_bounding_box()
+mesh = mesh.crop(bbox)
+
+mesh.compute_vertex_normals()
+
+o3d.io.write_triangle_mesh(args.output, mesh)
