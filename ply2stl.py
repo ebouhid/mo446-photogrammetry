@@ -11,6 +11,16 @@ parser.add_argument('-o', '--output', type=str,
                     required=True, help='Output STL path')
 parser.add_argument('-s', '--scale', type=float, default=1.0,
                     help='Scaling factor (bump it up if the model is too small)')
+parser.add_argument('-d', '--depth', type=float, default=15,
+                    help='Poisson reconstruction depth, higher = more detailed but slower and uses more RAM')
+parser.add_argument('-on', '--outlier-neighbors', type=int, default=30,
+                    help='Number of neighbors to analyze for outlier removal, higher = more aggressive')
+parser.add_argument('-osr', '--outlier-std-ratio', type=float, default=2.0,
+                    help='Standard deviation ratio for outlier removal, higher = more aggressive')
+parser.add_argument('-k', '--knn', type=int, default=30,
+                    help='Number of nearest neighbors for normal estimation, higher = smoother normals')
+parser.add_argument('-tp', '--tangent-plane', type=int, default=100,
+                    help='Number of nearest neighbors for tangent plane estimation, higher = smoother normals')
 
 args = parser.parse_args()
 
@@ -23,16 +33,16 @@ pcd = o3d.geometry.PointCloud()
 pcd.points = o3d.utility.Vector3dVector(points)
 
 # ajustar valores para remover outliers e ruido
-cl, ind = pcd.remove_statistical_outlier(nb_neighbors=30, std_ratio=2.0)
+cl, ind = pcd.remove_statistical_outlier(
+    nb_neighbors=args.outlier_neighbors, std_ratio=args.outlier_std_ratio)
 pcd = pcd.select_by_index(ind)
 
 pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(
-    knn=30))  # maior = normais mais suaves
-# empiricamente 100 fica melhor. nao pergunte!
-pcd.orient_normals_consistent_tangent_plane(100)
+    knn=args.knn))
+pcd.orient_normals_consistent_tangent_plane(args.tangent_plane)
 
 mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
-    pcd, depth=15)  # mais depth = maior resolucao, mas é mais lento e usa muita RAM
+    pcd, depth=args.depth)
 
 bbox = pcd.get_axis_aligned_bounding_box()
 mesh = mesh.crop(bbox)
