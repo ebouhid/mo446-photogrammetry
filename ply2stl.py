@@ -17,7 +17,6 @@ args = parser.parse_args()
 with open(args.input, 'rb') as f:
     plydata = PlyData.read(f)
 
-# escala de 10 porque o modelo original é muito pequeno
 points = np.array(plydata['vertex'][['x', 'y', 'z']].tolist()) * args.scale
 
 pcd = o3d.geometry.PointCloud()
