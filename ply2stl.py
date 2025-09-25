@@ -11,7 +11,7 @@ parser.add_argument('-o', '--output', type=str,
                     required=True, help='Output STL path')
 parser.add_argument('-s', '--scale', type=float, default=1.0,
                     help='Scaling factor (bump it up if the model is too small)')
-parser.add_argument('-d', '--depth', type=float, default=15,
+parser.add_argument('-d', '--depth', type=int, default=15,
                     help='Poisson reconstruction depth, higher = more detailed but slower and uses more RAM')
 parser.add_argument('-on', '--outlier-neighbors', type=int, default=30,
                     help='Number of neighbors to analyze for outlier removal, higher = more aggressive')
@@ -21,6 +21,7 @@ parser.add_argument('-k', '--knn', type=int, default=30,
                     help='Number of nearest neighbors for normal estimation, higher = smoother normals')
 parser.add_argument('-tp', '--tangent-plane', type=int, default=100,
                     help='Number of nearest neighbors for tangent plane estimation, higher = smoother normals')
+parser.add_argument('-f', '--flip', action='store_true', help='Flip normals')
 
 args = parser.parse_args()
 
@@ -46,6 +47,9 @@ mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
 
 bbox = pcd.get_axis_aligned_bounding_box()
 mesh = mesh.crop(bbox)
+
+if args.flip:
+    mesh.triangles = o3d.utility.Vector3iVector(np.asarray(mesh.triangles)[:, ::-1])
 
 mesh.compute_vertex_normals()
 
