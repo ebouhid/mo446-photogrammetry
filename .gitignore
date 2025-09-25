@@ -1,3 +1,5 @@
 # Dataset files (get it from our README)
 dataset_buddha/
 
+# Pure Colmap files
+pure_colmap*
