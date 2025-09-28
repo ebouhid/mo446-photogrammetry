@@ -51,6 +51,6 @@ mesh = mesh.crop(bbox)
 if args.flip:
     mesh.triangles = o3d.utility.Vector3iVector(np.asarray(mesh.triangles)[:, ::-1])
 
-mesh.compute_vertex_normals()
+mesh.compute_vertex_normals(normalized=True)
 
 o3d.io.write_triangle_mesh(args.output, mesh)
