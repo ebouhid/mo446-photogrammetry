@@ -3,3 +3,6 @@ dataset_buddha/
 
 # Pure Colmap files
 pure_colmap*
+data/
+
+venv/
